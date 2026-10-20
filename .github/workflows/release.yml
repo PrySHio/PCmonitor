@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest  # Исправлено на runs-on
+    runs-on: windows-latest
 
     steps:
     - name: Checkout code
@@ -21,16 +21,15 @@ jobs:
     # --- 1. СБОРКА: НЕ ТРЕБУЕТ DOTNET (Self-Contained ZIP) ---
     - name: Publish Self-Contained (No .NET required)
       run: |
-        dotnet publish -c Release -r win-x64 --self-contained true -o ./pub-self /p:PublishSingleFile=true /p:PublishReadyToRun=true /p:PublishTrimmed=false /p:IncludeNativeLibrariesForSelfExtract=true
+        dotnet publish PcMonitor.csproj -c Release -r win-x64 --self-contained true -o ./pub-self /p:PublishSingleFile=true /p:PublishReadyToRun=true /p:PublishTrimmed=false /p:IncludeNativeLibrariesForSelfExtract=true
         Compress-Archive -Path ./pub-self/* -DestinationPath ./PcMonitor_Autonomous_win-x64.zip
 
     # --- 2. СБОРКА: ТРЕБУЕТ DOTNET (Зависимый ZIP + Обычный EXE) ---
     - name: Publish Framework-Dependent (Requires .NET)
       run: |
-        dotnet publish -c Release -r win-x64 --self-contained false -o ./pub-dependent /p:PublishSingleFile=true /p:PublishTrimmed=false /p:IncludeNativeLibrariesForSelfExtract=true
-        # Копируем чистый .exe отдельно для релиза
-        Copy-Item -Path ./pub-dependent/PcMonitor.exe -DestinationPath ./PcMonitor_Requires_Dotnet.exe
-        # Архивируем всю папку сборки (включая dll от SQLite, если они не вшились)
+        dotnet publish PcMonitor.csproj -c Release -r win-x64 --self-contained false -o ./pub-dependent /p:PublishSingleFile=true /p:PublishTrimmed=false /p:IncludeNativeLibrariesForSelfExtract=true
+        # Исправлено: используем -Destination вместо -DestinationPath
+        Copy-Item -Path ./pub-dependent/PcMonitor.exe -Destination ./PcMonitor_Requires_Dotnet.exe
         Compress-Archive -Path ./pub-dependent/* -DestinationPath ./PcMonitor_Dependent_win-x64.zip
 
     # --- 3. ЗАГРУЗКА ВСЕХ АРТИФАКТОВ В РЕЛИЗ GitHub ---
