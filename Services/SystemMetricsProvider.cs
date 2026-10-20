@@ -75,7 +75,7 @@ public sealed class SystemMetricsProvider : IMetricsProvider, IDisposable
                 if (d.DriveType != DriveType.Fixed || !d.IsReady) continue;
                 double total = d.TotalSize / Gib;
                 double free = d.AvailableFreeSpace / Gib;
-                var label = string.IsNullOrWhiteSpace(d.VolumeLabel) ? "Локальный диск" : d.VolumeLabel;
+                var label = string.IsNullOrWhiteSpace(d.VolumeLabel) ? Loc.T("HW_LocalDisk") : d.VolumeLabel;
                 result.Add(new DiskInfo(d.Name.TrimEnd('\\'), label, total, total - free));
             }
             catch
@@ -99,14 +99,15 @@ public sealed class SystemMetricsProvider : IMetricsProvider, IDisposable
             HardwareInfo.Ram(totalGb),
         };
         list.AddRange(HardwareInfo.Gpus());
-        list.Add(new ComponentInfo("Система", "IconDashboard", new KeyValuePair<string, string>[]
+        string d = Loc.T("Unit_DayShort"), h = Loc.T("Unit_HourShort"), min = Loc.T("Unit_Min");
+        list.Add(new ComponentInfo(Loc.T("Nav_System"), "IconDashboard", new KeyValuePair<string, string>[]
         {
-            new("ОС", os.Build >= 22000 ? "Windows 11" : "Windows 10"),
-            new("Сборка", os.Build.ToString()),
-            new("Время работы", uptime.TotalDays >= 1
-                ? $"{(int)uptime.TotalDays} д {uptime.Hours} ч"
-                : $"{uptime.Hours} ч {uptime.Minutes} мин"),
-            new("Права администратора", IsAdmin() ? "Да" : "Нет"),
+            new(Loc.T("HW_Os"), os.Build >= 22000 ? "Windows 11" : "Windows 10"),
+            new(Loc.T("HW_Build"), os.Build.ToString()),
+            new(Loc.T("HW_Uptime"), uptime.TotalDays >= 1
+                ? $"{(int)uptime.TotalDays} {d} {uptime.Hours} {h}"
+                : $"{uptime.Hours} {h} {uptime.Minutes} {min}"),
+            new(Loc.T("HW_Admin"), Loc.T(IsAdmin() ? "Yes" : "No")),
         }));
         return list;
     }
@@ -117,9 +118,9 @@ public sealed class SystemMetricsProvider : IMetricsProvider, IDisposable
         {
             using var key = Registry.LocalMachine.OpenSubKey(@"HARDWARE\DESCRIPTION\System\CentralProcessor\0");
             var name = (key?.GetValue("ProcessorNameString") as string)?.Trim();
-            return string.IsNullOrEmpty(name) ? "Недоступно" : name;
+            return string.IsNullOrEmpty(name) ? Loc.T("NA") : name;
         }
-        catch { return "Недоступно"; }
+        catch { return Loc.T("NA"); }
     }
 
     private static int? CpuMhz()

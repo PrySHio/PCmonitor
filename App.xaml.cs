@@ -25,18 +25,21 @@ public partial class App : Application
             return;
         }
 
-        // Числа и даты в разметке — по региональным настройкам пользователя
+        var settings = SettingsService.Load();
+        Loc.Initialize(settings.Language); // язык и региональные форматы — до создания окна
+
+        // Числа и даты в разметке — по выбранному языку (при смене языка обновляется у главного окна)
         FrameworkElement.LanguageProperty.OverrideMetadata(
             typeof(FrameworkElement),
             new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag)));
 
-        var settings = SettingsService.Load();
         ThemeService.Apply(settings.Theme); // до создания окна, чтобы не мигал стартовый вариант
         AutostartService.Refresh();
         base.OnStartup(e);
 
         var window = new MainWindow();
         MainWindow = window;
+        window.Language = XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag);
         SessionEnding += (_, _) => window.PrepareExit(); // выход из Windows не должен блокироваться «сворачиванием в трей»
 
         // «Запускать свёрнутым» действует только при запуске системой, ручной запуск всегда показывает окно

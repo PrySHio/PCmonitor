@@ -11,15 +11,15 @@ public partial class DashboardViewModel : ObservableObject
     private readonly MonitoringService _monitor;
     private readonly AppSettings _settings;
 
-    public MetricCardViewModel Cpu { get; } = new("Процессор");
-    public MetricCardViewModel Ram { get; } = new("Оперативная память");
-    public MetricCardViewModel Gpu { get; } = new("Видеокарта");
-    public MetricCardViewModel CpuTemp { get; } = new("Процессор");
-    public MetricCardViewModel GpuTemp { get; } = new("Видеокарта");
+    public MetricCardViewModel Cpu { get; } = new("Card_Processor");
+    public MetricCardViewModel Ram { get; } = new("Card_Ram");
+    public MetricCardViewModel Gpu { get; } = new("Card_Gpu");
+    public MetricCardViewModel CpuTemp { get; } = new("Card_Processor");
+    public MetricCardViewModel GpuTemp { get; } = new("Card_Gpu");
     public ObservableCollection<DiskItemViewModel> Disks { get; } = new();
 
     [ObservableProperty] private IReadOnlyList<ChartSeries> _overview = Array.Empty<ChartSeries>();
-    [ObservableProperty] private string _updatedText = "Ожидание данных…";
+    [ObservableProperty] private string _updatedText = Loc.T("Dash_Waiting");
     [ObservableProperty] private string _alertText = "";
     [ObservableProperty] private bool _hasAlert;
 
@@ -32,6 +32,15 @@ public partial class DashboardViewModel : ObservableObject
         _settings = settings;
         monitor.Updated += Update;
         if (monitor.Latest is not null) Update(monitor.Latest);
+        Loc.LanguageChanged += OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged()
+    {
+        foreach (var card in new[] { Cpu, Ram, Gpu, CpuTemp, GpuTemp }) card.RefreshTitle();
+        OnPropertyChanged(nameof(SourceName));
+        if (_monitor.Latest is { } latest) Update(latest);
+        else UpdatedText = Loc.T("Dash_Waiting");
     }
 
     private ChartSeries Line(string key, string name, string brush, string unit = "%") =>
@@ -42,12 +51,12 @@ public partial class DashboardViewModel : ObservableObject
         var alerts = new List<string>();
 
         var cpuLevel = Fmt.LevelFor(s.Cpu, _settings.CpuThreshold);
-        Cpu.Set(s.Cpu, "%", "Общая загрузка процессора", cpuLevel, Line(MetricKeys.Cpu, "CPU", "CpuBrush"));
+        Cpu.Set(s.Cpu, "%", Loc.T("Dash_CpuSubtitle"), cpuLevel, Line(MetricKeys.Cpu, "CPU", "CpuBrush"));
         if (cpuLevel == Level.Critical) alerts.Add($"CPU {s.Cpu:0} %");
 
         var ramLevel = Fmt.LevelFor(s.RamPercent, _settings.RamThreshold);
         Ram.Set(s.RamPercent, "%",
-            $"Занято {Fmt.Gb(s.RamUsedGb)} из {Fmt.Gb(s.RamTotalGb)} · свободно {Fmt.Gb(s.RamTotalGb - s.RamUsedGb)}",
+            Loc.F("Dash_RamSubtitle", Fmt.Gb(s.RamUsedGb), Fmt.Gb(s.RamTotalGb), Fmt.Gb(s.RamTotalGb - s.RamUsedGb)),
             ramLevel, Line(MetricKeys.Ram, "RAM", "RamBrush"));
         if (ramLevel == Level.Critical) alerts.Add($"RAM {s.RamPercent:0} %");
 
@@ -55,15 +64,15 @@ public partial class DashboardViewModel : ObservableObject
         {
             var gpuLevel = Fmt.LevelFor(gl, _settings.GpuThreshold);
             var vram = s.GpuVramPercent is double vp
-                ? $"Видеопамять {Fmt.Gb(s.GpuVramUsedGb!.Value)} из {Fmt.Gb(s.GpuVramTotalGb!.Value)} ({vp:0} %)"
-                : "Загрузка графического процессора";
+                ? Loc.F("Dash_Vram", Fmt.Gb(s.GpuVramUsedGb!.Value), Fmt.Gb(s.GpuVramTotalGb!.Value), vp)
+                : Loc.T("Dash_GpuLoad");
             Gpu.Set(gl, "%", vram, gpuLevel, Line(MetricKeys.Gpu, "GPU", "GpuBrush"));
             if (gpuLevel == Level.Critical) alerts.Add($"GPU {gl:0} %");
         }
-        else Gpu.SetUnavailable("Видеокарта не обнаружена или её датчики не поддерживаются");
+        else Gpu.SetUnavailable(Loc.T("Dash_GpuNone"));
 
-        SetTemp(CpuTemp, s.CpuTemp, "Датчик недоступен. Для температуры CPU обычно нужен запуск от имени администратора", alerts, "CPU");
-        SetTemp(GpuTemp, s.GpuTemp, "Датчик температуры GPU недоступен", alerts, "GPU");
+        SetTemp(CpuTemp, s.CpuTemp, Loc.T("Dash_CpuTempNA"), alerts, "CPU");
+        SetTemp(GpuTemp, s.GpuTemp, Loc.T("Dash_GpuTempNA"), alerts, "GPU");
 
         SyncDisks(s.Disks);
 
@@ -74,9 +83,9 @@ public partial class DashboardViewModel : ObservableObject
             Line(MetricKeys.Gpu, "GPU", "GpuBrush"),
         };
 
-        UpdatedText = $"Обновлено {s.Time:HH:mm:ss} · каждые {_monitor.IntervalSeconds} с";
+        UpdatedText = Loc.F("Dash_Updated", s.Time, _monitor.IntervalSeconds);
         HasAlert = _settings.NotificationsEnabled && alerts.Count > 0;
-        AlertText = HasAlert ? "Превышен порог: " + string.Join(", ", alerts) : "";
+        AlertText = HasAlert ? Loc.T("Dash_AlertPrefix") + string.Join(", ", alerts) : "";
     }
 
     private void SetTemp(MetricCardViewModel vm, double? value, string reason, List<string> alerts, string name)

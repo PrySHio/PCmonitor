@@ -9,7 +9,7 @@ public sealed class DemoMetricsProvider : IMetricsProvider
     private double _cpu = 28, _ram = 52, _gpu = 18, _cpuT = 48;
     private double _phase;
 
-    public string SourceName => "Демо-данные";
+    public string SourceName => Loc.T("Demo_Source");
     public bool IsDemo => true;
 
     public MetricsSnapshot Read()
@@ -24,8 +24,8 @@ public sealed class DemoMetricsProvider : IMetricsProvider
         var disks = new[]
         {
             new DiskInfo("C:", "Windows", 476.9, 312.4),
-            new DiskInfo("D:", "Данные", 931.5, 402.7),
-            new DiskInfo("E:", "Игры", 1862.9, 1701.3),
+            new DiskInfo("D:", Loc.T("Demo_Data"), 931.5, 402.7),
+            new DiskInfo("E:", Loc.T("Demo_Games"), 1862.9, 1701.3),
         };
 
         return new MetricsSnapshot(
@@ -35,37 +35,41 @@ public sealed class DemoMetricsProvider : IMetricsProvider
             _cpuT, null, disks);
     }
 
-    public IReadOnlyList<ComponentInfo> GetComponents() => new[]
+    public IReadOnlyList<ComponentInfo> GetComponents()
     {
-        new ComponentInfo("Процессор", "IconCpu", new KeyValuePair<string, string>[]
+        string gb = Loc.T("Unit_Gb"), ghz = Loc.T("Unit_Ghz"), mhz = Loc.T("Unit_Mhz");
+        return new[]
         {
-            new("Модель", "AMD Ryzen 7 5800X"),
-            new("Ядра / потоки", "8 / 16"),
-            new("Базовая частота", "3,8 ГГц"),
-            new("Сокет", "AM4"),
-        }),
-        new ComponentInfo("Оперативная память", "IconRam", new KeyValuePair<string, string>[]
-        {
-            new("Объём", "32 ГБ"),
-            new("Тип", "DDR4"),
-            new("Частота", "3600 МГц"),
-            new("Модули", "2 × 16 ГБ"),
-        }),
-        new ComponentInfo("Видеокарта", "IconGpu", new KeyValuePair<string, string>[]
-        {
-            new("Модель", "NVIDIA GeForce RTX 3060"),
-            new("Видеопамять", "12 ГБ GDDR6"),
-            new("Драйвер", "560.94"),
-            new("Температура", "Недоступно"),
-        }),
-        new ComponentInfo("Система", "IconDashboard", new KeyValuePair<string, string>[]
-        {
-            new("ОС", "Windows 11 Pro"),
-            new("Сборка", "22631"),
-            new("Время работы", "3 д 14 ч"),
-            new("Права администратора", "Нет"),
-        }),
-    };
+            new ComponentInfo(Loc.T("Card_Processor"), "IconCpu", new KeyValuePair<string, string>[]
+            {
+                new(Loc.T("HW_Model"), "AMD Ryzen 7 5800X"),
+                new(Loc.T("HW_CoresThreads"), "8 / 16"),
+                new(Loc.T("HW_BaseFreq"), $"{3.8:0.0} {ghz}"),
+                new(Loc.T("HW_Socket"), "AM4"),
+            }),
+            new ComponentInfo(Loc.T("Card_Ram"), "IconRam", new KeyValuePair<string, string>[]
+            {
+                new(Loc.T("HW_Capacity"), $"32 {gb}"),
+                new(Loc.T("HW_Type"), "DDR4"),
+                new(Loc.T("HW_Speed"), $"3600 {mhz}"),
+                new(Loc.T("HW_Modules"), $"2 × 16 {gb}"),
+            }),
+            new ComponentInfo(Loc.T("Card_Gpu"), "IconGpu", new KeyValuePair<string, string>[]
+            {
+                new(Loc.T("HW_Model"), "NVIDIA GeForce RTX 3060"),
+                new(Loc.T("HW_Vram"), $"12 {gb} GDDR6"),
+                new(Loc.T("HW_Driver"), "560.94"),
+                new(Loc.T("HW_Temp"), Loc.T("NA")),
+            }),
+            new ComponentInfo(Loc.T("Nav_System"), "IconDashboard", new KeyValuePair<string, string>[]
+            {
+                new(Loc.T("HW_Os"), "Windows 11 Pro"),
+                new(Loc.T("HW_Build"), "22631"),
+                new(Loc.T("HW_Uptime"), $"3 {Loc.T("Unit_DayShort")} 14 {Loc.T("Unit_HourShort")}"),
+                new(Loc.T("HW_Admin"), Loc.T("No")),
+            }),
+        };
+    }
 
     private double Walk(double cur, double target, double k, double min, double max)
     {

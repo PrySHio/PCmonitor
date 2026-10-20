@@ -11,7 +11,10 @@ namespace PcMonitor.ViewModels;
 
 public partial class PeriodOption : ObservableObject
 {
-    public required string Title { get; init; }
+    /// <summary>Ключ названия периода в словаре локализации.</summary>
+    public required string TitleKey { get; init; }
+    public string Title => Loc.T(TitleKey);
+    public void Refresh() => OnPropertyChanged(nameof(Title));
     public required TimeSpan Duration { get; init; }
     [ObservableProperty] private bool _isSelected;
 }
@@ -50,19 +53,19 @@ public sealed partial class HistoryViewModel : ObservableObject
 
         Periods = new[]
         {
-            new PeriodOption { Title = "15 минут", Duration = TimeSpan.FromMinutes(15) },
-            new PeriodOption { Title = "1 час", Duration = TimeSpan.FromHours(1), IsSelected = true },
-            new PeriodOption { Title = "6 часов", Duration = TimeSpan.FromHours(6) },
-            new PeriodOption { Title = "24 часа", Duration = TimeSpan.FromHours(24) },
-            new PeriodOption { Title = "7 дней", Duration = TimeSpan.FromDays(7) },
+            new PeriodOption { TitleKey = "Period_15m", Duration = TimeSpan.FromMinutes(15) },
+            new PeriodOption { TitleKey = "Period_1h", Duration = TimeSpan.FromHours(1), IsSelected = true },
+            new PeriodOption { TitleKey = "Period_6h", Duration = TimeSpan.FromHours(6) },
+            new PeriodOption { TitleKey = "Period_24h", Duration = TimeSpan.FromHours(24) },
+            new PeriodOption { TitleKey = "Period_7d", Duration = TimeSpan.FromDays(7) },
         };
         Metrics = new[]
         {
-            new SeriesOption { Key = MetricKeys.Cpu, Name = "CPU", BrushKey = "CpuBrush", IsSelected = true },
-            new SeriesOption { Key = MetricKeys.Ram, Name = "RAM", BrushKey = "RamBrush" },
-            new SeriesOption { Key = MetricKeys.Gpu, Name = "GPU", BrushKey = "GpuBrush" },
-            new SeriesOption { Key = MetricKeys.CpuTemp, Name = "Темп. CPU", BrushKey = "TempBrush", Unit = "°C" },
-            new SeriesOption { Key = MetricKeys.GpuTemp, Name = "Темп. GPU", BrushKey = "DiskBrush", Unit = "°C" },
+            new SeriesOption { Key = MetricKeys.Cpu, NameKey = "Metric_Cpu", BrushKey = "CpuBrush", IsSelected = true },
+            new SeriesOption { Key = MetricKeys.Ram, NameKey = "Metric_Ram", BrushKey = "RamBrush" },
+            new SeriesOption { Key = MetricKeys.Gpu, NameKey = "Metric_Gpu", BrushKey = "GpuBrush" },
+            new SeriesOption { Key = MetricKeys.CpuTemp, NameKey = "Metric_CpuTemp", BrushKey = "TempBrush", Unit = "°C" },
+            new SeriesOption { Key = MetricKeys.GpuTemp, NameKey = "Metric_GpuTemp", BrushKey = "DiskBrush", Unit = "°C" },
         };
 
         _period = Periods.First(p => p.IsSelected);
@@ -82,6 +85,13 @@ public sealed partial class HistoryViewModel : ObservableObject
                 _metric = (SeriesOption)s;
                 _ = RefreshAsync();
             };
+
+        Loc.LanguageChanged += () =>
+        {
+            foreach (var p in Periods) p.Refresh();
+            foreach (var m in Metrics) m.Refresh();
+            _ = RefreshAsync(); // подписи графика, счётчик записей и сообщения об ошибках — на новом языке
+        };
 
         // ошибки записи приходят из фонового потока
         recorder.StatusChanged += msg =>
@@ -139,7 +149,7 @@ public sealed partial class HistoryViewModel : ObservableObject
                 Average = Maximum = Minimum = Records = "—";
             }
 
-            DbInfo = $"В базе: {total:N0} записей";
+            DbInfo = Loc.F("Hist_InDb", total);
             _readError = "";
         }
         catch (Exception ex)
@@ -148,7 +158,7 @@ public sealed partial class HistoryViewModel : ObservableObject
             Series = Array.Empty<ChartSeries>();
             HasData = false;
             Average = Maximum = Minimum = Records = "—";
-            _readError = $"Не удалось прочитать историю: {ex.Message}";
+            _readError = Loc.F("Hist_ReadErr", ex.Message);
         }
 
         IsLoaded = true;
@@ -158,8 +168,8 @@ public sealed partial class HistoryViewModel : ObservableObject
     [RelayCommand]
     private async Task ClearAsync()
     {
-        var answer = MessageBox.Show("Удалить всю сохранённую историю измерений? Это действие нельзя отменить.",
-            "Очистка истории", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+        var answer = MessageBox.Show(Loc.T("Hist_ClearConfirm"),
+            Loc.T("Hist_ClearTitle"), MessageBoxButton.YesNo, MessageBoxImage.Warning);
         if (answer != MessageBoxResult.Yes) return;
 
         try
@@ -169,7 +179,7 @@ public sealed partial class HistoryViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _readError = $"Не удалось очистить историю: {ex.Message}";
+            _readError = Loc.F("Hist_ClearErr", ex.Message);
             UpdateError();
             return;
         }

@@ -6,6 +6,8 @@ namespace PcMonitor.Services;
 public sealed class AppSettings
 {
     public string Theme { get; set; } = "Dark";
+    /// <summary>Язык интерфейса: "ru", "en" или пусто (определяется по языку Windows при первом запуске).</summary>
+    public string Language { get; set; } = "";
     public int IntervalSeconds { get; set; } = 1;
     public bool SaveHistory { get; set; } = true;
     public bool NotificationsEnabled { get; set; } = true;

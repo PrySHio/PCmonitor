@@ -31,6 +31,7 @@ public sealed partial class SystemViewModel : ObservableObject
     {
         IsDemo = provider.IsDemo;
         _ = LoadAsync(provider);
+        Loc.LanguageChanged += () => _ = LoadAsync(provider); // подписи и единицы собираются на выбранном языке
     }
 
     /// <summary>Сведения об оборудовании собираются в фоне (WMI медленный), UI при этом не блокируется.</summary>

@@ -14,6 +14,9 @@ public sealed class TrayService : IDisposable
     private readonly WinForms.NotifyIcon _icon;
     private readonly WinForms.ContextMenuStrip _menu;
     private readonly Drawing.Icon _appIcon;
+    private readonly WinForms.ToolStripMenuItem _openItem;
+    private readonly WinForms.ToolStripMenuItem _settingsItem;
+    private readonly WinForms.ToolStripMenuItem _exitItem;
     private string _tooltip = "";
 
     public event Action? OpenRequested;
@@ -24,18 +27,19 @@ public sealed class TrayService : IDisposable
     {
         _appIcon = LoadIcon();
 
-        var open = new WinForms.ToolStripMenuItem("Открыть");
-        open.Font = new Drawing.Font(open.Font, Drawing.FontStyle.Bold); // пункт по умолчанию
-        open.Click += (_, _) => OpenRequested?.Invoke();
+        _openItem = new WinForms.ToolStripMenuItem();
+        _openItem.Font = new Drawing.Font(_openItem.Font, Drawing.FontStyle.Bold); // пункт по умолчанию
+        _openItem.Click += (_, _) => OpenRequested?.Invoke();
 
-        var settings = new WinForms.ToolStripMenuItem("Настройки");
-        settings.Click += (_, _) => SettingsRequested?.Invoke();
+        _settingsItem = new WinForms.ToolStripMenuItem();
+        _settingsItem.Click += (_, _) => SettingsRequested?.Invoke();
 
-        var exit = new WinForms.ToolStripMenuItem("Выход");
-        exit.Click += (_, _) => ExitRequested?.Invoke();
+        _exitItem = new WinForms.ToolStripMenuItem();
+        _exitItem.Click += (_, _) => ExitRequested?.Invoke();
 
         _menu = new WinForms.ContextMenuStrip();
-        _menu.Items.AddRange(new WinForms.ToolStripItem[] { open, settings, new WinForms.ToolStripSeparator(), exit });
+        _menu.Items.AddRange(new WinForms.ToolStripItem[] { _openItem, _settingsItem, new WinForms.ToolStripSeparator(), _exitItem });
+        UpdateTexts();
 
         _icon = new WinForms.NotifyIcon
         {
@@ -49,6 +53,14 @@ public sealed class TrayService : IDisposable
             if (e.Button == WinForms.MouseButtons.Left) OpenRequested?.Invoke();
         };
         _icon.BalloonTipClicked += (_, _) => OpenRequested?.Invoke();
+    }
+
+    /// <summary>Подписи пунктов меню на текущем языке (вызывается при старте и при смене языка).</summary>
+    public void UpdateTexts()
+    {
+        _openItem.Text = Loc.T("Tray_Open");
+        _settingsItem.Text = Loc.T("Nav_Settings");
+        _exitItem.Text = Loc.T("Tray_Exit");
     }
 
     /// <summary>Текст подсказки при наведении. Обновляется только при изменении.</summary>

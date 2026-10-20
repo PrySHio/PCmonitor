@@ -29,8 +29,7 @@ public static class AutostartService
     private const string ApprovedKey = @"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run";
     private const string ValueName = "PcMonitor";
     private const string TaskName = "PC Monitor Autostart";
-    private const string NotBuiltMessage =
-        "Автозапуск доступен только для собранного .exe (сейчас приложение запущено через dotnet).";
+    private static string NotBuiltMessage => Loc.T("Auto_NotBuilt");
 
     /// <summary>Путь к .exe; null, если приложение запущено через «dotnet run» (регистрировать dotnet.exe нельзя).</summary>
     private static string? ExePath
@@ -105,7 +104,7 @@ public static class AutostartService
         }
         catch (Exception ex)
         {
-            return $"Не удалось изменить автозапуск: {ex.Message}";
+            return Loc.F("Auto_ChangeErr", ex.Message);
         }
     }
 
@@ -145,7 +144,7 @@ public static class AutostartService
         }
         catch (Exception ex)
         {
-            return $"Не удалось изменить автозапуск: {ex.Message}";
+            return Loc.F("Auto_ChangeErr", ex.Message);
         }
     }
 
@@ -169,12 +168,12 @@ public static class AutostartService
             var (code, output) = RunSchtasks($"/Create /TN \"{TaskName}\" /XML \"{xmlPath}\" /F", elevate: !IsProcessElevated());
             if (code == 0 && TaskExists()) return null;
             return code == -2
-                ? "Запрос Windows (UAC) отклонён — автозапуск от администратора не включён."
-                : $"Не удалось создать задачу автозапуска (код {code}). {output}".Trim();
+                ? Loc.T("Auto_UacDeniedCreate")
+                : Loc.F("Auto_CreateErr", code, output).Trim();
         }
         catch (Exception ex)
         {
-            return $"Не удалось создать задачу автозапуска: {ex.Message}";
+            return Loc.F("Auto_CreateEx", ex.Message);
         }
         finally
         {
@@ -189,12 +188,12 @@ public static class AutostartService
             var (code, output) = RunSchtasks($"/Delete /TN \"{TaskName}\" /F", elevate: !IsProcessElevated());
             if (code == 0 || !TaskExists()) return null;
             return code == -2
-                ? "Запрос Windows (UAC) отклонён — режим автозапуска не изменён."
-                : $"Не удалось удалить задачу автозапуска (код {code}). {output}".Trim();
+                ? Loc.T("Auto_UacDeniedDelete")
+                : Loc.F("Auto_DeleteErr", code, output).Trim();
         }
         catch (Exception ex)
         {
-            return $"Не удалось удалить задачу автозапуска: {ex.Message}";
+            return Loc.F("Auto_DeleteEx", ex.Message);
         }
     }
 
@@ -208,7 +207,7 @@ public static class AutostartService
         var sb = new StringBuilder();
         sb.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-16\"?>");
         sb.AppendLine("<Task version=\"1.2\" xmlns=\"http://schemas.microsoft.com/windows/2004/02/mit/task\">");
-        sb.AppendLine("  <RegistrationInfo><Description>Автозапуск PC Monitor с правами администратора</Description></RegistrationInfo>");
+        sb.AppendLine($"  <RegistrationInfo><Description>{SecurityElement.Escape(Loc.T("Auto_TaskDesc"))}</Description></RegistrationInfo>");
         sb.AppendLine("  <Triggers>");
         sb.AppendLine($"    <LogonTrigger><Enabled>true</Enabled><UserId>{user}</UserId><Delay>PT5S</Delay></LogonTrigger>");
         sb.AppendLine("  </Triggers>");
@@ -262,7 +261,7 @@ public static class AutostartService
 
             string output = "";
             if (!elevate) output = (p.StandardOutput.ReadToEnd() + p.StandardError.ReadToEnd()).Trim();
-            if (!p.WaitForExit(60_000)) return (-1, "Время ожидания истекло.");
+            if (!p.WaitForExit(60_000)) return (-1, Loc.T("Auto_Timeout"));
             return (p.ExitCode, output);
         }
         catch (Win32Exception ex) when (ex.NativeErrorCode == 1223) // ERROR_CANCELLED: отказ в окне UAC

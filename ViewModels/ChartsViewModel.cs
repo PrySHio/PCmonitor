@@ -8,7 +8,10 @@ namespace PcMonitor.ViewModels;
 public partial class SeriesOption : ObservableObject
 {
     public required string Key { get; init; }
-    public required string Name { get; init; }
+    /// <summary>Ключ названия в словаре локализации.</summary>
+    public required string NameKey { get; init; }
+    public string Name => Loc.T(NameKey);
+    public void Refresh() => OnPropertyChanged(nameof(Name));
     public required string BrushKey { get; init; }
     public string Unit { get; init; } = "%";
     [ObservableProperty] private bool _isSelected;
@@ -18,7 +21,8 @@ public partial class SeriesOption : ObservableObject
 public partial class RangeOption : ObservableObject
 {
     public required int Seconds { get; init; }
-    public required string Title { get; init; }
+    public string Title => Loc.F("Range_Seconds", Seconds);
+    public void Refresh() => OnPropertyChanged(nameof(Title));
     [ObservableProperty] private bool _isSelected;
 }
 
@@ -32,23 +36,23 @@ public partial class ChartsViewModel : ObservableObject
 
     [ObservableProperty] private IReadOnlyList<ChartSeries> _series = Array.Empty<ChartSeries>();
     [ObservableProperty] private int _maxPoints = 60;
-    [ObservableProperty] private IReadOnlyList<string> _xLabels = new[] { "-60 с", "-45 с", "-30 с", "-15 с", "сейчас" };
+    [ObservableProperty] private IReadOnlyList<string> _xLabels = Array.Empty<string>();
 
     public ChartsViewModel(MonitoringService monitor)
     {
         _monitor = monitor;
         Options = new[]
         {
-            new SeriesOption { Key = MetricKeys.Cpu, Name = "CPU", BrushKey = "CpuBrush", IsSelected = true },
-            new SeriesOption { Key = MetricKeys.Ram, Name = "RAM", BrushKey = "RamBrush", IsSelected = true },
-            new SeriesOption { Key = MetricKeys.Gpu, Name = "GPU", BrushKey = "GpuBrush", IsSelected = true },
-            new SeriesOption { Key = MetricKeys.CpuTemp, Name = "Темп. CPU", BrushKey = "TempBrush", Unit = "°C" },
-            new SeriesOption { Key = MetricKeys.GpuTemp, Name = "Темп. GPU", BrushKey = "DiskBrush", Unit = "°C" },
+            new SeriesOption { Key = MetricKeys.Cpu, NameKey = "Metric_Cpu", BrushKey = "CpuBrush", IsSelected = true },
+            new SeriesOption { Key = MetricKeys.Ram, NameKey = "Metric_Ram", BrushKey = "RamBrush", IsSelected = true },
+            new SeriesOption { Key = MetricKeys.Gpu, NameKey = "Metric_Gpu", BrushKey = "GpuBrush", IsSelected = true },
+            new SeriesOption { Key = MetricKeys.CpuTemp, NameKey = "Metric_CpuTemp", BrushKey = "TempBrush", Unit = "°C" },
+            new SeriesOption { Key = MetricKeys.GpuTemp, NameKey = "Metric_GpuTemp", BrushKey = "DiskBrush", Unit = "°C" },
         };
         Ranges = new[]
         {
-            new RangeOption { Seconds = 60, Title = "60 секунд", IsSelected = true },
-            new RangeOption { Seconds = 120, Title = "120 секунд" },
+            new RangeOption { Seconds = 60, IsSelected = true },
+            new RangeOption { Seconds = 120 },
         };
 
         foreach (var o in Options) o.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(SeriesOption.IsSelected)) Rebuild(); };
@@ -62,6 +66,12 @@ public partial class ChartsViewModel : ObservableObject
             };
 
         monitor.Updated += _ => Rebuild();
+        Loc.LanguageChanged += () =>
+        {
+            foreach (var o in Options) o.Refresh();
+            foreach (var r in Ranges) r.Refresh();
+            Rebuild();
+        };
         Rebuild();
     }
 
@@ -70,7 +80,8 @@ public partial class ChartsViewModel : ObservableObject
         int seconds = _range.Seconds;
         int points = Math.Max(2, seconds / Math.Max(1, _monitor.IntervalSeconds));
         MaxPoints = points;
-        XLabels = new[] { $"-{seconds} с", $"-{seconds * 3 / 4} с", $"-{seconds / 2} с", $"-{seconds / 4} с", "сейчас" };
+        string sec = Loc.T("Unit_Sec");
+        XLabels = new[] { $"-{seconds} {sec}", $"-{seconds * 3 / 4} {sec}", $"-{seconds / 2} {sec}", $"-{seconds / 4} {sec}", Loc.T("Chart_Now") };
 
         Series = Options.Where(o => o.IsSelected).Select(o => new ChartSeries
         {
@@ -87,5 +98,5 @@ public partial class ChartsViewModel : ObservableObject
     }
 
     private void Set(string key, double? v, string unit) =>
-        Options.First(o => o.Key == key).CurrentText = v is double d ? $"{d:0} {unit}" : "Недоступно";
+        Options.First(o => o.Key == key).CurrentText = v is double d ? $"{d:0} {unit}" : Loc.T("NA");
 }

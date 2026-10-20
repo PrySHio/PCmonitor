@@ -10,14 +10,23 @@ public partial class ThemeOption : ObservableObject
 {
     public ThemeOption(ThemeInfo info)
     {
-        Name = info.Name; Title = info.Title;
+        Name = info.Name;
         Background = info.Background; Surface = info.Surface; Accent = info.Accent;
     }
     public string Name { get; }
-    public string Title { get; }
+    public string Title => Loc.T("Theme_" + Name);
+    public void Refresh() => OnPropertyChanged(nameof(Title));
     public Color Background { get; }
     public Color Surface { get; }
     public Color Accent { get; }
+    [ObservableProperty] private bool _isSelected;
+}
+
+public partial class LanguageOption : ObservableObject
+{
+    public LanguageOption(LanguageInfo info) { Code = info.Code; Title = info.Title; }
+    public string Code { get; }
+    public string Title { get; }
     [ObservableProperty] private bool _isSelected;
 }
 
@@ -27,19 +36,27 @@ public partial class SettingsViewModel : ObservableObject
     private readonly MonitoringService _monitor;
     private readonly NotificationService _notifications;
     private bool _syncingTheme;
+    private bool _syncingLanguage;
 
     private AutostartState _applied; // что реально настроено в системе сейчас
 
     public IReadOnlyList<ThemeOption> Themes { get; }
+    public IReadOnlyList<LanguageOption> Languages { get; }
 
-    public string ElevationText { get; } = AutostartService.IsProcessElevated()
-        ? "Сейчас приложение работает с правами администратора: температура процессора доступна."
-        : "Сейчас приложение работает без прав администратора: температура процессора может быть недоступна.";
+    public string ElevationText =>
+        Loc.T(AutostartService.IsProcessElevated() ? "Settings_ElevatedYes" : "Settings_ElevatedNo");
 
-    [ObservableProperty] private int _intervalSeconds;
+    // Значения с единицами измерения собираются здесь, а не в XAML, чтобы единицы переводились вместе с языком
+    public string IntervalText => $"{IntervalSeconds} {Loc.T("Unit_Sec")}";
+    public string HistoryIntervalText => $"{HistoryIntervalSeconds} {Loc.T("Unit_Sec")}";
+    public string RetentionText => $"{RetentionDays} {Loc.T("Unit_Days")}";
+    public string TempThresholdText => $"{TempThreshold} °C";
+    public string CooldownText => $"{NotifyCooldownMinutes} {Loc.T("Unit_Min")}";
+
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(IntervalText))] private int _intervalSeconds;
     [ObservableProperty] private bool _saveHistory;
-    [ObservableProperty] private int _retentionDays;
-    [ObservableProperty] private int _historyIntervalSeconds;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(RetentionText))] private int _retentionDays;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(HistoryIntervalText))] private int _historyIntervalSeconds;
     [ObservableProperty] private bool _closeToTray;
     [ObservableProperty] private bool _minimizeToTray;
     [ObservableProperty] private bool _launchAtStartup;
@@ -50,8 +67,8 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private int _cpuThreshold;
     [ObservableProperty] private int _ramThreshold;
     [ObservableProperty] private int _gpuThreshold;
-    [ObservableProperty] private int _tempThreshold;
-    [ObservableProperty] private int _notifyCooldownMinutes;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(TempThresholdText))] private int _tempThreshold;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(CooldownText))] private int _notifyCooldownMinutes;
     [ObservableProperty] private string _statusMessage = "";
 
     public SettingsViewModel(AppSettings settings, MonitoringService monitor, NotificationService notifications)
@@ -60,8 +77,10 @@ public partial class SettingsViewModel : ObservableObject
         _monitor = monitor;
         _notifications = notifications;
         Themes = ThemeService.Themes.Select(t => new ThemeOption(t)).ToList();
+        Languages = Loc.Languages.Select(l => new LanguageOption(l)).ToList();
         LoadFromSettings();
         SyncThemeSelection();
+        SyncLanguageSelection();
         _ = LoadAutostartStateAsync();
 
         foreach (var t in Themes)
@@ -72,7 +91,43 @@ public partial class SettingsViewModel : ObservableObject
                 if (opt.IsSelected) ApplyTheme(opt.Name);
             };
 
+        foreach (var l in Languages)
+            l.PropertyChanged += (s, e) =>
+            {
+                if (_syncingLanguage || e.PropertyName != nameof(LanguageOption.IsSelected)) return;
+                var opt = (LanguageOption)s!;
+                if (opt.IsSelected) ApplyLanguage(opt.Code);
+            };
+
         ThemeService.ThemeChanged += SyncThemeSelection; // быстрая смена темы из заголовка окна
+        Loc.LanguageChanged += OnLanguageChanged;
+    }
+
+    private void SyncLanguageSelection()
+    {
+        _syncingLanguage = true;
+        foreach (var l in Languages) l.IsSelected = l.Code == Loc.Current;
+        _syncingLanguage = false;
+    }
+
+    /// <summary>Язык применяется и сохраняется сразу, как и тема: перезапуск не нужен.</summary>
+    private void ApplyLanguage(string code)
+    {
+        Loc.SetLanguage(code);
+        _settings.Language = code;
+        SettingsService.Save(_settings);
+    }
+
+    private void OnLanguageChanged()
+    {
+        foreach (var t in Themes) t.Refresh();
+        OnPropertyChanged(nameof(ElevationText));
+        OnPropertyChanged(nameof(IntervalText));
+        OnPropertyChanged(nameof(HistoryIntervalText));
+        OnPropertyChanged(nameof(RetentionText));
+        OnPropertyChanged(nameof(TempThresholdText));
+        OnPropertyChanged(nameof(CooldownText));
+        StatusMessage = "";
     }
 
     private void LoadFromSettings()
@@ -121,7 +176,7 @@ public partial class SettingsViewModel : ObservableObject
 
     [RelayCommand]
     private void ShowTest() =>
-        _notifications.Show("Проверка уведомлений", "Так выглядит предупреждение о превышении порога.", NotificationSound);
+        _notifications.Show(Loc.T("Settings_TestTitle"), Loc.T("Settings_TestText"), NotificationSound);
 
     [RelayCommand]
     private async Task SaveAsync()
@@ -150,7 +205,7 @@ public partial class SettingsViewModel : ObservableObject
         string? autostartError = null;
         if (wantEnabled != _applied.Enabled || (wantEnabled && wantAdmin != _applied.AsAdmin))
         {
-            StatusMessage = wantAdmin ? "Подтвердите запрос Windows (UAC)…" : "Применяю настройки автозапуска…";
+            StatusMessage = Loc.T(wantAdmin ? "Settings_UacPrompt" : "Settings_Applying");
             autostartError = await Task.Run(() => AutostartService.Apply(wantEnabled, wantAdmin));
 
             var actual = await Task.Run(AutostartService.GetState);
@@ -159,7 +214,7 @@ public partial class SettingsViewModel : ObservableObject
             RunAsAdmin = actual.AsAdmin;
         }
 
-        StatusMessage = autostartError ?? $"Настройки сохранены · {DateTime.Now:HH:mm:ss}";
+        StatusMessage = autostartError ?? Loc.F("Settings_Saved", DateTime.Now);
     }
 
     [RelayCommand]
@@ -182,6 +237,6 @@ public partial class SettingsViewModel : ObservableObject
         GpuThreshold = d.GpuThreshold;
         TempThreshold = d.TempThreshold;
         NotifyCooldownMinutes = d.NotifyCooldownMinutes;
-        StatusMessage = "Значения по умолчанию — нажмите «Сохранить», чтобы применить";
+        StatusMessage = Loc.T("Settings_ResetDone");
     }
 }

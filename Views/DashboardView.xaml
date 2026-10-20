@@ -1,6 +1,7 @@
 <UserControl x:Class="PcMonitor.Views.DashboardView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l="clr-namespace:PcMonitor.Services"
              xmlns:c="clr-namespace:PcMonitor.Controls"
              xmlns:m="clr-namespace:PcMonitor.Models">
     <UserControl.Triggers>
@@ -110,7 +111,7 @@
             <!-- Заголовок страницы -->
             <Grid Margin="0,0,0,20">
                 <StackPanel>
-                    <TextBlock Text="Обзор системы" Style="{StaticResource PageTitle}" />
+                    <TextBlock Text="{l:Tr Dash_Title}" Style="{StaticResource PageTitle}" />
                     <TextBlock Text="{Binding UpdatedText}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
                 </StackPanel>
                 <Border HorizontalAlignment="Right" VerticalAlignment="Top" CornerRadius="9" Padding="11,5"
@@ -157,7 +158,7 @@
                         <StackPanel Orientation="Horizontal">
                             <Path Data="{StaticResource IconTemp}" Fill="{DynamicResource TempBrush}"
                                   Width="20" Height="20" Stretch="Uniform" />
-                            <TextBlock Text="Температуры" Style="{StaticResource SectionTitle}" Margin="10,0,0,0" />
+                            <TextBlock Text="{l:Tr Dash_Temps}" Style="{StaticResource SectionTitle}" Margin="10,0,0,0" />
                         </StackPanel>
                         <ContentControl Content="{Binding CpuTemp}" ContentTemplate="{StaticResource TempRow}" />
                         <ContentControl Content="{Binding GpuTemp}" ContentTemplate="{StaticResource TempRow}" />
@@ -169,7 +170,7 @@
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
                             <Path Data="{StaticResource IconDisk}" Fill="{DynamicResource DiskBrush}"
                                   Width="20" Height="20" Stretch="Uniform" />
-                            <TextBlock Text="Диски" Style="{StaticResource SectionTitle}" Margin="10,0,0,0" />
+                            <TextBlock Text="{l:Tr Dash_Disks}" Style="{StaticResource SectionTitle}" Margin="10,0,0,0" />
                         </StackPanel>
                         <ItemsControl ItemsSource="{Binding Disks}" ItemTemplate="{StaticResource DiskRow}" />
                     </StackPanel>
@@ -180,14 +181,14 @@
             <Border Style="{StaticResource Card}">
                 <StackPanel>
                     <Grid Margin="0,0,0,12">
-                        <TextBlock Text="Нагрузка за последнюю минуту" Style="{StaticResource SectionTitle}" />
+                        <TextBlock Text="{l:Tr Dash_LoadMinute}" Style="{StaticResource SectionTitle}" />
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                             <Ellipse Width="9" Height="9" Fill="{DynamicResource CpuBrush}" />
-                            <TextBlock Text="CPU" Style="{StaticResource Muted}" Margin="6,0,16,0" />
+                            <TextBlock Text="{l:Tr Metric_Cpu}" Style="{StaticResource Muted}" Margin="6,0,16,0" />
                             <Ellipse Width="9" Height="9" Fill="{DynamicResource RamBrush}" />
-                            <TextBlock Text="RAM" Style="{StaticResource Muted}" Margin="6,0,16,0" />
+                            <TextBlock Text="{l:Tr Metric_Ram}" Style="{StaticResource Muted}" Margin="6,0,16,0" />
                             <Ellipse Width="9" Height="9" Fill="{DynamicResource GpuBrush}" />
-                            <TextBlock Text="GPU" Style="{StaticResource Muted}" Margin="6,0,0,0" />
+                            <TextBlock Text="{l:Tr Metric_Gpu}" Style="{StaticResource Muted}" Margin="6,0,0,0" />
                         </StackPanel>
                     </Grid>
                     <c:LineChart Height="230" MaxPoints="60" Series="{Binding Overview}" />

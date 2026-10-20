@@ -25,6 +25,7 @@ public partial class MainWindow : Window
             ShowFromTray();
         };
         _tray.ExitRequested += ExitApplication;
+        Loc.LanguageChanged += _tray.UpdateTexts;
 
         _vm.Monitor.Updated += s => _tray.SetTooltip($"PC Monitor\nCPU {s.Cpu:0} % · RAM {s.RamPercent:0} %");
         _vm.Notifications.BalloonSink = (title, text) => _tray.ShowBalloon(title, text, warning: true);
@@ -75,9 +76,7 @@ public partial class MainWindow : Window
 
         _vm.Settings.TrayHintShown = true;
         SettingsService.Save(_vm.Settings);
-        _tray.ShowBalloon("PC Monitor продолжает работать",
-            "Приложение свёрнуто в трей. Дважды щёлкните по значку, чтобы открыть окно; «Выход» — в меню значка.",
-            warning: false);
+        _tray.ShowBalloon(Loc.T("Tray_HintTitle"), Loc.T("Tray_HintText"), warning: false);
     }
 
     private void OnStateChanged(object? sender, EventArgs e)

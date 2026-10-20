@@ -4,7 +4,7 @@ namespace PcMonitor.Services;
 
 public sealed record ThresholdAlert(string MetricKey, string Name, double Value, double Threshold, string Unit)
 {
-    public string Text => $"{Name}: {Value:0} {Unit} (порог {Threshold:0} {Unit})";
+    public string Text => Loc.F("Notify_Text", Name, Value, Unit, Threshold);
 }
 
 /// <summary>
@@ -30,8 +30,8 @@ public sealed class ThresholdNotifier
         Check(result, now, cooldown, MetricKeys.Cpu, "CPU", s.Cpu, settings.CpuThreshold, "%");
         Check(result, now, cooldown, MetricKeys.Ram, "RAM", s.RamPercent, settings.RamThreshold, "%");
         Check(result, now, cooldown, MetricKeys.Gpu, "GPU", s.GpuLoad, settings.GpuThreshold, "%");
-        Check(result, now, cooldown, MetricKeys.CpuTemp, "Температура CPU", s.CpuTemp, settings.TempThreshold, "°C");
-        Check(result, now, cooldown, MetricKeys.GpuTemp, "Температура GPU", s.GpuTemp, settings.TempThreshold, "°C");
+        Check(result, now, cooldown, MetricKeys.CpuTemp, Loc.T("Alert_CpuTemp"), s.CpuTemp, settings.TempThreshold, "°C");
+        Check(result, now, cooldown, MetricKeys.GpuTemp, Loc.T("Alert_GpuTemp"), s.GpuTemp, settings.TempThreshold, "°C");
         return result;
     }
 

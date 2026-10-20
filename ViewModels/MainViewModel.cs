@@ -10,13 +10,16 @@ namespace PcMonitor.ViewModels;
 
 public partial class NavItem : ObservableObject
 {
-    public NavItem(string title, string iconKey, object page)
+    private readonly string _titleKey;
+
+    public NavItem(string titleKey, string iconKey, object page)
     {
-        Title = title;
+        _titleKey = titleKey;
         Page = page;
         Icon = Application.Current.TryFindResource(iconKey) as Geometry ?? Geometry.Empty;
     }
-    public string Title { get; }
+    public string Title => Loc.T(_titleKey);
+    public void Refresh() => OnPropertyChanged(nameof(Title));
     public Geometry Icon { get; }
     public object Page { get; }
     [ObservableProperty] private bool _isSelected;
@@ -55,11 +58,11 @@ public partial class MainViewModel : ObservableObject
 
         Navigation = new[]
         {
-            new NavItem("Обзор", "IconDashboard", new DashboardViewModel(_monitor, _settings)),
-            new NavItem("Графики", "IconChart", new ChartsViewModel(_monitor)),
-            new NavItem("История", "IconHistory", new HistoryViewModel(history, _recorder)),
-            new NavItem("Система", "IconCpu", new SystemViewModel(provider)),
-            new NavItem("Настройки", "IconSettings", new SettingsViewModel(_settings, _monitor, Notifications)),
+            new NavItem("Nav_Overview", "IconDashboard", new DashboardViewModel(_monitor, _settings)),
+            new NavItem("Nav_Charts", "IconChart", new ChartsViewModel(_monitor)),
+            new NavItem("Nav_History", "IconHistory", new HistoryViewModel(history, _recorder)),
+            new NavItem("Nav_System", "IconCpu", new SystemViewModel(provider)),
+            new NavItem("Nav_Settings", "IconSettings", new SettingsViewModel(_settings, _monitor, Notifications)),
         };
 
         foreach (var item in Navigation)
@@ -68,6 +71,12 @@ public partial class MainViewModel : ObservableObject
                 if (e.PropertyName == nameof(NavItem.IsSelected) && ((NavItem)s!).IsSelected)
                     CurrentPage = ((NavItem)s).Page;
             };
+
+        Loc.LanguageChanged += () =>
+        {
+            foreach (var item in Navigation) item.Refresh();
+            OnPropertyChanged(nameof(SourceName));
+        };
 
         Navigation[0].IsSelected = true;
         _monitor.Updated += OnSnapshot;
@@ -85,7 +94,7 @@ public partial class MainViewModel : ObservableObject
     {
         var alerts = _notifier.Evaluate(s, _settings);
         if (alerts.Count == 0) return;
-        Notifications.Show("Превышен порог", string.Join("\n", alerts.Select(a => a.Text)), _settings.NotificationSound);
+        Notifications.Show(Loc.T("Notify_Title"), string.Join("\n", alerts.Select(a => a.Text)), _settings.NotificationSound);
     }
 
     /// <summary>Штатное завершение: досрочно записывает накопленные замеры в базу (ТЗ 4.2.3).</summary>

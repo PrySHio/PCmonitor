@@ -11,7 +11,7 @@ namespace PcMonitor.Services;
 /// </summary>
 internal static class HardwareInfo
 {
-    private const string NA = "Недоступно";
+    private static string NA => Loc.T("NA");
     private const double Gib = 1024.0 * 1024 * 1024;
 
     // ── Процессор ──────────────────────────────────────────────────────────
@@ -41,11 +41,11 @@ internal static class HardwareInfo
         name ??= fallbackName;
         threads ??= Environment.ProcessorCount;
 
-        return new ComponentInfo("Процессор", "IconCpu", new[]
+        return new ComponentInfo(Loc.T("Card_Processor"), "IconCpu", new[]
         {
-            Row("Модель", name),
-            Row("Ядра / потоки", cores is int c ? $"{c} / {threads}" : $"{threads} потоков"),
-            Row("Частота (макс.)", mhz is int m && m > 0 ? $"{m / 1000.0:0.0#} ГГц" : null),
+            Row(Loc.T("HW_Model"), name),
+            Row(Loc.T("HW_CoresThreads"), cores is int c ? $"{c} / {threads}" : Loc.F("HW_Threads", threads)),
+            Row(Loc.T("HW_MaxFreq"), mhz is int m && m > 0 ? $"{m / 1000.0:0.0#} {Loc.T("Unit_Ghz")}" : null),
         });
     }
 
@@ -78,15 +78,15 @@ internal static class HardwareInfo
         string? moduleText = mods.Count == 0
             ? null
             : string.Join(" + ", mods.GroupBy(m => m.Cap).Select(g => $"{g.Count()} × {Fmt.Gb(g.Key / Gib)}"));
-        string? slotText = mods.Count > 0 && slots is int s2 ? $"{mods.Count} из {s2}" : null;
+        string? slotText = mods.Count > 0 && slots is int s2 ? Loc.F("HW_SlotsOf", mods.Count, s2) : null;
 
-        return new ComponentInfo("Оперативная память", "IconRam", new[]
+        return new ComponentInfo(Loc.T("Card_Ram"), "IconRam", new[]
         {
-            Row("Объём", totalGb > 0 ? Fmt.Gb(totalGb) : null),
-            Row("Тип", type),
-            Row("Частота", speed is int sp ? $"{sp} МГц" : null),
-            Row("Модули", moduleText),
-            Row("Занято слотов", slotText),
+            Row(Loc.T("HW_Capacity"), totalGb > 0 ? Fmt.Gb(totalGb) : null),
+            Row(Loc.T("HW_Type"), type),
+            Row(Loc.T("HW_Speed"), speed is int sp ? $"{sp} {Loc.T("Unit_Mhz")}" : null),
+            Row(Loc.T("HW_Modules"), moduleText),
+            Row(Loc.T("HW_Slots"), slotText),
         });
     }
 
@@ -113,20 +113,20 @@ internal static class HardwareInfo
                 if (vram is null or 0) vram = a.Ram; // у WMI поле 32-битное: для карт >4 ГБ занижает
 
                 result.Add(new ComponentInfo(
-                    phys.Count > 1 ? $"Видеокарта {i + 1}" : "Видеокарта", "IconGpu", new[]
+                    phys.Count > 1 ? Loc.F("HW_GpuN", i + 1) : Loc.T("Card_Gpu"), "IconGpu", new[]
                     {
-                        Row("Модель", a.Name),
-                        Row("Видеопамять", vram is > 0 ? Fmt.Gb((double)vram.Value / Gib) : null),
-                        Row("Драйвер", Driver(a.Name, a.Driver)),
+                        Row(Loc.T("HW_Model"), a.Name),
+                        Row(Loc.T("HW_Vram"), vram is > 0 ? Fmt.Gb((double)vram.Value / Gib) : null),
+                        Row(Loc.T("HW_Driver"), Driver(a.Name, a.Driver)),
                     }));
             }
         }
         catch { }
 
         if (result.Count == 0)
-            result.Add(new ComponentInfo("Видеокарта", "IconGpu", new[]
+            result.Add(new ComponentInfo(Loc.T("Card_Gpu"), "IconGpu", new[]
             {
-                Row("Модель", null), Row("Видеопамять", null), Row("Драйвер", null),
+                Row(Loc.T("HW_Model"), null), Row(Loc.T("HW_Vram"), null), Row(Loc.T("HW_Driver"), null),
             }));
         return result;
     }

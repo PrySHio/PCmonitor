@@ -100,7 +100,7 @@ public sealed class HistoryRecorder
                 // возвращаем записи в очередь, чтобы повторить при следующем сбросе
                 foreach (var r in batch)
                     if (_queue.Count < MaxQueue) _queue.Enqueue(r);
-                Report($"Не удалось записать историю: {ex.Message}");
+                Report(Loc.F("Hist_WriteErr", ex.Message));
             }
         }
         finally
@@ -118,7 +118,7 @@ public sealed class HistoryRecorder
         }
         catch (Exception ex)
         {
-            Report($"Не удалось очистить устаревшие записи: {ex.Message}");
+            Report(Loc.F("Hist_PurgeErr", ex.Message));
         }
     }
 
