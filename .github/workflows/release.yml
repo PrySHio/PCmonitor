@@ -8,6 +8,10 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    
+    # НАСТРОЙКА ПРАВ: Выдаем права на запись контента и релизов
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout code
@@ -28,7 +32,6 @@ jobs:
     - name: Publish Framework-Dependent (Requires .NET)
       run: |
         dotnet publish PcMonitor.csproj -c Release -r win-x64 --self-contained false -o ./pub-dependent /p:PublishSingleFile=true /p:PublishTrimmed=false /p:IncludeNativeLibrariesForSelfExtract=true
-        # Исправлено: используем -Destination вместо -DestinationPath
         Copy-Item -Path ./pub-dependent/PcMonitor.exe -Destination ./PcMonitor_Requires_Dotnet.exe
         Compress-Archive -Path ./pub-dependent/* -DestinationPath ./PcMonitor_Dependent_win-x64.zip
 
