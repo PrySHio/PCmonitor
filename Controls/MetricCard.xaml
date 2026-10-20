@@ -1,0 +1,105 @@
+<UserControl x:Class="PcMonitor.Controls.MetricCard"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:PcMonitor.Controls"
+             xmlns:m="clr-namespace:PcMonitor.Models">
+    <Border>
+        <Border.Style>
+            <Style TargetType="Border" BasedOn="{StaticResource Card}">
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </Border.Style>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Заголовок -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid Width="38" Height="38">
+                    <Border CornerRadius="11" Opacity="0.16"
+                            Background="{Binding Accent, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                    <Path Data="{Binding Icon, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                          Fill="{Binding Accent, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                          Width="20" Height="20" Stretch="Uniform"
+                          HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Grid>
+                <TextBlock Grid.Column="1" Text="{Binding Title}" Style="{StaticResource SectionTitle}"
+                           VerticalAlignment="Center" Margin="12,0,8,0" />
+                <Border Grid.Column="2" CornerRadius="8" Padding="9,3" VerticalAlignment="Center"
+                        Background="{DynamicResource Surface2Brush}">
+                    <TextBlock Text="{Binding StatusText}" FontSize="11.5" FontWeight="Medium">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Level}" Value="{x:Static m:Level.Warning}">
+                                        <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Level}" Value="{x:Static m:Level.Critical}">
+                                        <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsAvailable}" Value="False">
+                                        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Border>
+            </Grid>
+
+            <!-- Значение -->
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,18,0,0">
+                <TextBlock Text="{Binding ValueText}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource BigValue}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsAvailable}" Value="False">
+                                    <Setter Property="FontSize" Value="22" />
+                                    <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Level}" Value="{x:Static m:Level.Warning}">
+                                    <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Level}" Value="{x:Static m:Level.Critical}">
+                                    <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+                <TextBlock Text="{Binding Unit}" Style="{StaticResource Muted}" FontSize="15"
+                           VerticalAlignment="Bottom" Margin="6,0,0,6" />
+            </StackPanel>
+
+            <TextBlock Grid.Row="2" Text="{Binding Subtitle}" Style="{StaticResource Muted}" Margin="0,2,0,0" />
+
+            <!-- Мини-график -->
+            <c:LineChart Grid.Row="3" Height="64" Margin="0,14,0,0" VerticalAlignment="Bottom"
+                         ShowGrid="False" MaxPoints="60" Series="{Binding Series}">
+                <c:LineChart.Style>
+                    <Style TargetType="c:LineChart">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsAvailable}" Value="False">
+                                <Setter Property="Visibility" Value="Hidden" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </c:LineChart.Style>
+            </c:LineChart>
+        </Grid>
+    </Border>
+</UserControl>

@@ -1,0 +1,57 @@
+<UserControl x:Class="PcMonitor.Views.ChartsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:PcMonitor.Controls">
+    <UserControl.Triggers>
+        <EventTrigger RoutedEvent="Loaded">
+            <BeginStoryboard Storyboard="{StaticResource PageFadeIn}" />
+        </EventTrigger>
+    </UserControl.Triggers>
+    <Grid Margin="32,4,32,32">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Margin="0,0,0,20">
+            <StackPanel>
+                <TextBlock Text="Графики" Style="{StaticResource PageTitle}" />
+                <TextBlock Text="Показатели в реальном времени. Наведите курсор на график, чтобы увидеть значения."
+                           Style="{StaticResource Muted}" Margin="0,4,0,0" />
+            </StackPanel>
+            <ItemsControl ItemsSource="{Binding Ranges}" HorizontalAlignment="Right" VerticalAlignment="Top">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <RadioButton GroupName="ChartRange" Style="{StaticResource Pill}"
+                                     Content="{Binding Title}" IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
+
+        <ItemsControl Grid.Row="1" ItemsSource="{Binding Options}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <ToggleButton Style="{StaticResource SeriesChip}" IsChecked="{Binding IsSelected, Mode=TwoWay}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Name}" FontWeight="Medium" />
+                            <TextBlock Text="{Binding CurrentText}" Style="{StaticResource Muted}" Margin="10,0,0,0"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </ToggleButton>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,8,0,0" MinHeight="300">
+            <c:LineChart Series="{Binding Series}" MaxPoints="{Binding MaxPoints}" XLabels="{Binding XLabels}" />
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,303 @@
+<UserControl x:Class="PcMonitor.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Triggers>
+        <EventTrigger RoutedEvent="Loaded">
+            <BeginStoryboard Storyboard="{StaticResource PageFadeIn}" />
+        </EventTrigger>
+    </UserControl.Triggers>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,6,0">
+            <StackPanel Margin="32,4,26,16" MaxWidth="900" HorizontalAlignment="Left">
+                <StackPanel Margin="0,0,0,20">
+                    <TextBlock Text="Настройки" Style="{StaticResource PageTitle}" />
+                    <TextBlock Text="Оформление, интервал опроса, история и пороги уведомлений" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+                </StackPanel>
+
+        <Border Style="{StaticResource Card}" Margin="0,0,0,16">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Path Data="{StaticResource IconPalette}" Fill="{DynamicResource AccentBrush}" Width="20" Height="20" Stretch="Uniform" />
+                    <TextBlock Text="Оформление" Style="{StaticResource SectionTitle}" Margin="10,0,0,0" />
+                </StackPanel>
+                <TextBlock Text="Тема применяется сразу и запоминается" Style="{StaticResource Muted}" Margin="0,4,0,16" />
+                <ItemsControl ItemsSource="{Binding Themes}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <RadioButton GroupName="Theme" Style="{StaticResource ThemeSwatch}"
+                                         IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+
+        <Border Style="{StaticResource Card}" Margin="0,0,0,16">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Path Data="{StaticResource IconClock}" Fill="{DynamicResource CpuBrush}" Width="20" Height="20" Stretch="Uniform" />
+                    <TextBlock Text="Мониторинг" Style="{StaticResource SectionTitle}" Margin="10,0,0,0" />
+                </StackPanel>
+                <Grid Margin="0,16,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Интервал обновления" FontWeight="Medium" />
+                        <TextBlock Text="Как часто опрашиваются датчики" Style="{StaticResource Muted}" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Slider Style="{StaticResource ModernSlider}" Width="240" Minimum="1" Maximum="10"
+                                TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding IntervalSeconds, Mode=TwoWay}" />
+                        <TextBlock Text="{Binding IntervalSeconds, StringFormat={}{0} с}" Width="78" TextAlignment="Right"
+                                   FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+                <Grid Margin="0,16,0,0">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left">
+                        <TextBlock Text="Сохранять историю" FontWeight="Medium" />
+                        <TextBlock Text="Записывать замеры в локальную базу SQLite" Style="{StaticResource Muted}" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <CheckBox Style="{StaticResource ToggleSwitch}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                              IsChecked="{Binding SaveHistory, Mode=TwoWay}" />
+                </Grid>
+                <Grid Margin="0,16,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Период записи в историю" FontWeight="Medium" />
+                        <TextBlock Text="Чаще — подробнее график, но больше база" Style="{StaticResource Muted}" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Slider Style="{StaticResource ModernSlider}" Width="240" Minimum="1" Maximum="60"
+                                TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding HistoryIntervalSeconds, Mode=TwoWay}" />
+                        <TextBlock Text="{Binding HistoryIntervalSeconds, StringFormat={}{0} с}" Width="78" TextAlignment="Right"
+                                   FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+                <Grid Margin="0,16,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Срок хранения истории" FontWeight="Medium" />
+                        <TextBlock Text="Более старые записи удаляются автоматически" Style="{StaticResource Muted}" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Slider Style="{StaticResource ModernSlider}" Width="240" Minimum="1" Maximum="90"
+                                TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding RetentionDays, Mode=TwoWay}" />
+                        <TextBlock Text="{Binding RetentionDays, StringFormat={}{0} дн.}" Width="78" TextAlignment="Right"
+                                   FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <Border Style="{StaticResource Card}" Margin="0,0,0,16">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Path Data="{StaticResource IconBell}" Fill="{DynamicResource WarningBrush}" Width="20" Height="20" Stretch="Uniform" />
+                    <TextBlock Text="Уведомления" Style="{StaticResource SectionTitle}" Margin="10,0,0,0" />
+                </StackPanel>
+                <Grid Margin="0,16,0,0">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left">
+                        <TextBlock Text="Предупреждать о превышении порогов" FontWeight="Medium" />
+                        <TextBlock Text="Уведомление не повторяется на каждом цикле опроса" Style="{StaticResource Muted}" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <CheckBox Style="{StaticResource ToggleSwitch}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                              IsChecked="{Binding NotificationsEnabled, Mode=TwoWay}" />
+                </Grid>
+                <StackPanel>
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding NotificationsEnabled}" Value="False">
+                                    <Setter Property="IsEnabled" Value="False" />
+                                    <Setter Property="Opacity" Value="0.4" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                <Grid Margin="0,16,0,0">
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left">
+                            <TextBlock Text="Звук уведомления" FontWeight="Medium" />
+                            <TextBlock Text="Системный сигнал при предупреждении" Style="{StaticResource Muted}" Margin="0,2,0,0" />
+                        </StackPanel>
+                        <CheckBox Style="{StaticResource ToggleSwitch}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                  IsChecked="{Binding NotificationSound, Mode=TwoWay}" />
+                    </Grid>
+                    <Grid Margin="0,16,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Загрузка CPU" FontWeight="Medium" />
+                        <TextBlock Text="Порог срабатывания" Style="{StaticResource Muted}" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Slider Style="{StaticResource ModernSlider}" Width="240" Minimum="50" Maximum="100"
+                                TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding CpuThreshold, Mode=TwoWay}" />
+                        <TextBlock Text="{Binding CpuThreshold, StringFormat={}{0} %}" Width="78" TextAlignment="Right"
+                                   FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+                <Grid Margin="0,16,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Использование RAM" FontWeight="Medium" />
+                        <TextBlock Text="Порог срабатывания" Style="{StaticResource Muted}" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Slider Style="{StaticResource ModernSlider}" Width="240" Minimum="50" Maximum="100"
+                                TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding RamThreshold, Mode=TwoWay}" />
+                        <TextBlock Text="{Binding RamThreshold, StringFormat={}{0} %}" Width="78" TextAlignment="Right"
+                                   FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+                <Grid Margin="0,16,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Загрузка GPU" FontWeight="Medium" />
+                        <TextBlock Text="Порог срабатывания" Style="{StaticResource Muted}" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Slider Style="{StaticResource ModernSlider}" Width="240" Minimum="50" Maximum="100"
+                                TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding GpuThreshold, Mode=TwoWay}" />
+                        <TextBlock Text="{Binding GpuThreshold, StringFormat={}{0} %}" Width="78" TextAlignment="Right"
+                                   FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+                <Grid Margin="0,16,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Температура" FontWeight="Medium" />
+                        <TextBlock Text="Порог для CPU и GPU" Style="{StaticResource Muted}" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Slider Style="{StaticResource ModernSlider}" Width="240" Minimum="50" Maximum="110"
+                                TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding TempThreshold, Mode=TwoWay}" />
+                        <TextBlock Text="{Binding TempThreshold, StringFormat={}{0} °C}" Width="78" TextAlignment="Right"
+                                   FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+                <Grid Margin="0,16,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Повтор уведомления" FontWeight="Medium" />
+                        <TextBlock Text="Не чаще, чем раз в указанное время" Style="{StaticResource Muted}" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Slider Style="{StaticResource ModernSlider}" Width="240" Minimum="1" Maximum="60"
+                                TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding NotifyCooldownMinutes, Mode=TwoWay}" />
+                        <TextBlock Text="{Binding NotifyCooldownMinutes, StringFormat={}{0} мин}" Width="78" TextAlignment="Right"
+                                   FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+                    <Button Content="Показать тестовое уведомление" Style="{StaticResource GhostButton}"
+                            Command="{Binding ShowTestCommand}" HorizontalAlignment="Left" Margin="0,20,0,0" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+        <Border Style="{StaticResource Card}" Margin="0,0,0,16">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Path Data="{StaticResource IconDashboard}" Fill="{DynamicResource GpuBrush}" Width="20" Height="20" Stretch="Uniform" />
+                    <TextBlock Text="Приложение" Style="{StaticResource SectionTitle}" Margin="10,0,0,0" />
+                </StackPanel>
+                <Grid Margin="0,16,0,0">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left" MaxWidth="560">
+                        <TextBlock Text="Сворачивать в трей при закрытии" FontWeight="Medium" />
+                        <TextBlock Text="Крестик убирает окно в область уведомлений, а мониторинг и запись истории продолжаются. Если выключено — крестик закрывает приложение." Style="{StaticResource Muted}" Margin="0,2,0,0" TextWrapping="Wrap" TextTrimming="None" />
+                    </StackPanel>
+                    <CheckBox Style="{StaticResource ToggleSwitch}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                              IsChecked="{Binding CloseToTray, Mode=TwoWay}" />
+                </Grid>
+                <Grid Margin="0,16,0,0">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left" MaxWidth="560">
+                        <TextBlock Text="Сворачивать в трей при сворачивании" FontWeight="Medium" />
+                        <TextBlock Text="Кнопка «Свернуть» убирает окно с панели задач в трей." Style="{StaticResource Muted}" Margin="0,2,0,0" TextWrapping="Wrap" TextTrimming="None" />
+                    </StackPanel>
+                    <CheckBox Style="{StaticResource ToggleSwitch}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                              IsChecked="{Binding MinimizeToTray, Mode=TwoWay}" />
+                </Grid>
+                <Grid Margin="0,16,0,0">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left" MaxWidth="560">
+                        <TextBlock Text="Запускать вместе с Windows" FontWeight="Medium" />
+                        <TextBlock Text="Приложение будет запускаться при входе в систему. Отключить можно и в «Диспетчере задач → Автозагрузка»." Style="{StaticResource Muted}" Margin="0,2,0,0" TextWrapping="Wrap" TextTrimming="None" />
+                    </StackPanel>
+                    <CheckBox Style="{StaticResource ToggleSwitch}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                              IsChecked="{Binding LaunchAtStartup, Mode=TwoWay}" />
+                </Grid>
+                <StackPanel>
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding LaunchAtStartup}" Value="False">
+                                    <Setter Property="IsEnabled" Value="False" />
+                                    <Setter Property="Opacity" Value="0.4" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                <Grid Margin="0,16,0,0">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left" MaxWidth="560">
+                        <TextBlock Text="Запускать свёрнутым в трей" FontWeight="Medium" />
+                        <TextBlock Text="При запуске вместе с Windows окно не показывается и не мешает работе. Ручной запуск открывает окно как обычно." Style="{StaticResource Muted}" Margin="0,2,0,0" TextWrapping="Wrap" TextTrimming="None" />
+                    </StackPanel>
+                    <CheckBox Style="{StaticResource ToggleSwitch}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                              IsChecked="{Binding StartInTray, Mode=TwoWay}" />
+                </Grid>
+                <Grid Margin="0,16,0,0">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left" MaxWidth="560">
+                        <TextBlock Text="Запускать с правами администратора" FontWeight="Medium" />
+                        <TextBlock Text="Автозапуск без запроса при каждом входе: Windows запомнит разрешение (задача Планировщика с наивысшими правами). Подтверждение UAC потребуется один раз — при сохранении. Нужно для температуры процессора." Style="{StaticResource Muted}" Margin="0,2,0,0" TextWrapping="Wrap" TextTrimming="None" />
+                    </StackPanel>
+                    <CheckBox Style="{StaticResource ToggleSwitch}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                              IsChecked="{Binding RunAsAdmin, Mode=TwoWay}" />
+                </Grid>
+                </StackPanel>
+                <TextBlock Text="{Binding ElevationText}" Style="{StaticResource Muted}" Margin="0,16,0,0"
+                           TextWrapping="Wrap" TextTrimming="None" />
+            </StackPanel>
+        </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Панель действий -->
+        <Border Grid.Row="1" Background="{DynamicResource SidebarBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="0,1,0,0" Padding="32,14">
+            <Grid>
+                <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource Muted}" VerticalAlignment="Center" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Сбросить" Style="{StaticResource GhostButton}" Command="{Binding ResetCommand}" Margin="0,0,10,0" />
+                    <Button Content="Сохранить" Style="{StaticResource PrimaryButton}" Command="{Binding SaveCommand}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

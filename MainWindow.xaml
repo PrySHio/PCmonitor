@@ -1,0 +1,133 @@
+<Window x:Class="PcMonitor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:PcMonitor.ViewModels"
+        xmlns:views="clr-namespace:PcMonitor.Views"
+        Icon="Assets/app.ico"
+        Title="PC Monitor" Width="1320" Height="840" MinWidth="1120" MinHeight="700"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BgBrush}"
+        FontFamily="{StaticResource AppFont}"
+        TextOptions.TextFormattingMode="Ideal" UseLayoutRounding="True">
+
+    <Window.DataContext>
+        <vm:MainViewModel />
+    </Window.DataContext>
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="40" ResizeBorderThickness="6" GlassFrameThickness="0"
+                      CornerRadius="0" UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <DataTemplate DataType="{x:Type vm:DashboardViewModel}"><views:DashboardView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ChartsViewModel}"><views:ChartsView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:HistoryViewModel}"><views:HistoryView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SystemViewModel}"><views:SystemView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}"><views:SettingsView /></DataTemplate>
+    </Window.Resources>
+
+    <Grid x:Name="Root">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="244" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Боковая панель -->
+        <Border Background="{DynamicResource SidebarBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="0,0,1,0">
+            <DockPanel Margin="16,0,16,18">
+                <!-- Статус внизу -->
+                <Border DockPanel.Dock="Bottom" CornerRadius="12" Padding="14,12" Background="{DynamicResource Surface2Brush}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="8" Height="8" Fill="{DynamicResource SuccessBrush}" VerticalAlignment="Center" />
+                            <TextBlock Text="Мониторинг активен" FontSize="12.5" FontWeight="Medium" Margin="8,0,0,0" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding SourceName, StringFormat='Источник: {0}'}" Style="{StaticResource Muted}"
+                                   Margin="16,3,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <StackPanel>
+                    <!-- Логотип -->
+                    <StackPanel Orientation="Horizontal" Margin="4,16,0,0">
+                        <Border Width="38" Height="38" CornerRadius="11" Background="{DynamicResource AccentBrush}">
+                            <Path Data="{StaticResource IconCpu}" Fill="{DynamicResource AccentFgBrush}"
+                                  Width="22" Height="22" Stretch="Uniform" />
+                        </Border>
+                        <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="PC Monitor" FontFamily="{StaticResource AppFontDisplay}" FontSize="17" FontWeight="SemiBold" />
+                            <TextBlock Text="состояние компьютера" Style="{StaticResource Muted}" FontSize="11.5" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Навигация -->
+                    <ItemsControl ItemsSource="{Binding Navigation}" Margin="0,34,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <RadioButton GroupName="Nav" Style="{StaticResource NavButton}"
+                                             Content="{Binding Title}" Tag="{Binding Icon}"
+                                             IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Контент -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Кнопки заголовка (область перетаскивания — вся строка, кроме кнопок) -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button WindowChrome.IsHitTestVisibleInChrome="True" Style="{StaticResource CaptionButton}" Tag="{StaticResource IconPalette}"
+                        Command="{Binding CycleThemeCommand}" ToolTip="Сменить тему" />
+                <Button WindowChrome.IsHitTestVisibleInChrome="True" Style="{StaticResource CaptionButton}" Tag="{StaticResource IconMinimize}" Click="OnMinimize" />
+                <Button WindowChrome.IsHitTestVisibleInChrome="True" Style="{StaticResource CaptionButton}" Tag="{StaticResource IconMaximize}" Click="OnMaximize" />
+                <Button WindowChrome.IsHitTestVisibleInChrome="True" Style="{StaticResource CloseCaptionButton}" Tag="{StaticResource IconClose}" Click="OnClose" />
+            </StackPanel>
+
+            <ContentControl Grid.Row="1" Content="{Binding CurrentPage}" />
+
+            <!-- Уведомления о превышении порогов -->
+            <ItemsControl Grid.Row="1" ItemsSource="{Binding Notifications.Toasts}" Focusable="False"
+                          HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="360" Margin="0,0,24,24">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="0,10,0,0" Padding="16,14" CornerRadius="14"
+                                Background="{DynamicResource Surface2Brush}"
+                                BorderBrush="{DynamicResource DangerBrush}" BorderThickness="1">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.35" Color="Black" />
+                            </Border.Effect>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Path Data="{StaticResource IconBell}" Fill="{DynamicResource DangerBrush}"
+                                      Width="20" Height="20" Stretch="Uniform" VerticalAlignment="Top" Margin="0,2,0,0" />
+                                <StackPanel Grid.Column="1" Margin="12,0,8,0">
+                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding Message}" Style="{StaticResource Muted}" Margin="0,4,0,0"
+                                               TextWrapping="Wrap" TextTrimming="None" />
+                                    <TextBlock Text="{Binding Time}" Style="{StaticResource Muted}" FontSize="11" Margin="0,6,0,0" />
+                                </StackPanel>
+                                <Button Grid.Column="2" Style="{StaticResource CaptionButton}" Tag="{StaticResource IconClose}"
+                                        Width="28" Height="28" VerticalAlignment="Top"
+                                        Command="{Binding DismissCommand}" ToolTip="Закрыть" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
+    </Grid>
+</Window>
